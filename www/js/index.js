@@ -28,7 +28,17 @@ var app = {
     // 'pause', 'resume', etc.
     onDeviceReady: function() {
         //this.receivedEvent('deviceready');
-        this.videoCapture();
+        // this.videoCapture();
+        this.openSocket();
+    },
+
+    openSocket: function() {
+        var socket = io.connect('ws://10.0.2.2:8000');
+        socket.on('connect', function() {
+          socket.on('text', function(text) {
+            alert(text);
+          })
+        });
     },
 
     videoCapture: function() {
