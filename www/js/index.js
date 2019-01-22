@@ -33,12 +33,24 @@ var app = {
     },
 
     openSocket: function() {
-        var socket = io.connect('ws://10.0.2.2:8000');
-        socket.on('connect', function() {
-          socket.on('text', function(text) {
-            alert(text);
-          })
-        });
+      var ws = new WebSocket('ws://10.0.2.2:8000');
+
+      ws.onopen = function () {
+          this.send('test');         // transmit "hello" after connecting
+      };
+
+      ws.onmessage = function (event) {
+          console.log(event.data);    // will be "hello"
+          this.close();
+      };
+
+      ws.onerror = function () {
+          console.log('error');
+      };
+
+      ws.onclose = function (event) {
+          console.log('closing ' + event.code);
+      };
     },
 
     videoCapture: function() {
