@@ -27,7 +27,29 @@ var app = {
     // Bind any cordova events here. Common events are:
     // 'pause', 'resume', etc.
     onDeviceReady: function() {
-        this.receivedEvent('deviceready');
+        //this.receivedEvent('deviceready');
+        this.videoCapture();
+    },
+
+    videoCapture: function() {
+      var options = {
+        limit: 1,
+        duration: 60
+      };
+
+      navigator.device.capture.captureVideo(onSuccess, onError, options);
+
+      function onSuccess(mediaFiles) {
+        var i, path, len;
+        for (i = 0, len = mediaFiles.length; i < len; i +=1) {
+          path = mediaFiles[i].fullPath;
+          console.log(mediaFiles);
+        }
+      }
+
+      function onError(error) {
+        navigator.notification.alert('Error code: ' + error.code, null, 'Capture Error');
+      }
     },
 
     // Update DOM on a Received Event
