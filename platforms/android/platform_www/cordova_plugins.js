@@ -280,7 +280,8 @@ module.exports.metadata =
   "cordova-plugin-camera": "4.0.3",
   "cordova-plugin-whitelist": "1.3.3",
   "cordova-plugin-file": "6.0.1",
-  "cordova-plugin-media-capture": "3.0.2"
+  "cordova-plugin-media-capture": "3.0.2",
+  "cordova-plugin-ios-camera-permissions": "1.2.0"
 };
 // BOTTOM OF METADATA
 });
