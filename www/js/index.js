@@ -32,21 +32,26 @@ var app = {
     // 'pause', 'resume', etc.
     onDeviceReady: function() {
         //this.receivedEvent('deviceready');
-        this.videoCapture();
-        // this.openSocket();
+        this.videoCapture(this.openSocket);
 
         console.log(window.cordova.platformId);
     },
 
     openSocket: function(text) {
-      var ws = new WebSocket('ws://10.0.2.2:8000');
+
+      // ip address for connecting when emulator and server share same localhost
+      var ip_address_emulator = 'ws://10.0.2.2:8000';
+
+      // ip address for connecting when using a device that hosts a middleman connection through ngrok
+      var ip_address_ngrok = 'ws://0f35afae.ngrok.io';
+      var ws = new WebSocket(ip_address_ngrok);
 
       ws.onopen = function () {
-          this.send(text);         // transmit "text" after connecting
+          this.send(text);         // transmit passed text after connecting
       };
 
       ws.onmessage = function (event) {
-          console.log(event.data);    // will be "hello"
+          console.log(event.data);
           this.close();
       };
 
@@ -59,47 +64,33 @@ var app = {
       };
     },
 
-    videoCapture: function() {
+    videoCapture: function(socketFunc) {
       var options = {
         limit: 1,
         duration: 60
       };
 
-      navigator.device.capture.captureVideo(onSuccess, onError, options);
+      curryedOnSuccess = (socketFunc) => ( (mediaFiles) => onSuccess(socketFunc,mediaFiles) );
+      navigator.device.capture.captureVideo(curryedOnSuccess(socketFunc), onError, options);
 
-      function onSuccess(mediaFiles) {
+      function onSuccess(socketFunc, mediaFiles) {
         var i, path, len;
         path = mediaFiles[0].fullPath;
-          console.log(mediaFiles);
-          console.log(path);
 
-          window.resolveLocalFileSystemURL(path, (entry) => {
-            console.log(entry);
-            entry.file((file) => {
-              var reader = new FileReader();
-              reader.onloadend = function() {
-                console.log("Successful file read: " + this.result);
-              }
-              return reader.readAsDataURL(file);
-            }, (error) => {
-              console.log(error);
-            });
+        window.resolveLocalFileSystemURL(path, (entry) => {
+          entry.file((file) => {
+            var reader = new FileReader();
+            reader.onloadend = function() {
+              console.log("Successful file read: " + this.result);
+              socketFunc("my test text");
+            }
+            return reader.readAsDataURL(file);
           }, (error) => {
-            console.log(error);
-          })
-
-          // window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, (fs) => {
-          //   console.log('file system open: ' + fs.name);
-          //   fs.root.getFile(path, {create: false}, function(entry) {
-          //     console.log("didnt fail");
-          //     console.log(entry);
-          //   }, function(error) {
-          //     console.log(error);
-          //     console.log("failed getting file");
-          //   });
-          // }, function(fe) {
-          //   console.log("failed getting file system");
-          // });
+            console.log('Error opening file: ' + error);
+          });
+        }, (error) => {
+          console.log('Error resolving local file system: ' + error);
+        });
       }
 
       function onError(error) {
