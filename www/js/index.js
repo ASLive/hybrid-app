@@ -20,6 +20,10 @@ var app = {
     // Application Constructor
     initialize: function() {
         document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);
+        document.querySelector("#sendMessage").addEventListener("touchend", function() {
+          console.log("Take video");
+          navigator.device.capture.captureVideo(captureSuccess, captureError, {limit: 1});
+        }, false);
     },
 
     // deviceready Event Handler
@@ -28,15 +32,17 @@ var app = {
     // 'pause', 'resume', etc.
     onDeviceReady: function() {
         //this.receivedEvent('deviceready');
-        // this.videoCapture();
-        this.openSocket();
+        this.videoCapture();
+        // this.openSocket();
+
+        console.log(window.cordova.platformId);
     },
 
-    openSocket: function() {
+    openSocket: function(text) {
       var ws = new WebSocket('ws://10.0.2.2:8000');
 
       ws.onopen = function () {
-          this.send('test');         // transmit "hello" after connecting
+          this.send(text);         // transmit "text" after connecting
       };
 
       ws.onmessage = function (event) {
@@ -63,10 +69,37 @@ var app = {
 
       function onSuccess(mediaFiles) {
         var i, path, len;
-        for (i = 0, len = mediaFiles.length; i < len; i +=1) {
-          path = mediaFiles[i].fullPath;
+        path = mediaFiles[0].fullPath;
           console.log(mediaFiles);
-        }
+          console.log(path);
+
+          window.resolveLocalFileSystemURL(path, (entry) => {
+            console.log(entry);
+            entry.file((file) => {
+              var reader = new FileReader();
+              reader.onloadend = function() {
+                console.log("Successful file read: " + this.result);
+              }
+              return reader.readAsDataURL(file);
+            }, (error) => {
+              console.log(error);
+            });
+          }, (error) => {
+            console.log(error);
+          })
+
+          // window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, (fs) => {
+          //   console.log('file system open: ' + fs.name);
+          //   fs.root.getFile(path, {create: false}, function(entry) {
+          //     console.log("didnt fail");
+          //     console.log(entry);
+          //   }, function(error) {
+          //     console.log(error);
+          //     console.log("failed getting file");
+          //   });
+          // }, function(fe) {
+          //   console.log("failed getting file system");
+          // });
       }
 
       function onError(error) {
