@@ -20,9 +20,9 @@ var app = {
     // Application Constructor
     initialize: function() {
         document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);
-        document.querySelector("#sendMessage").addEventListener("touchend", function() {
+        document.querySelector("#sendMessage").addEventListener("touchend", () => {
           console.log("Take video");
-          navigator.device.capture.captureVideo(captureSuccess, captureError, {limit: 1});
+          this.videoCapture(this.openSocket);
         }, false);
     },
 
@@ -32,7 +32,7 @@ var app = {
     // 'pause', 'resume', etc.
     onDeviceReady: function() {
         //this.receivedEvent('deviceready');
-        this.videoCapture(this.openSocket);
+        // this.videoCapture(this.openSocket);
 
         console.log(window.cordova.platformId);
     },
@@ -43,7 +43,7 @@ var app = {
       var ip_address_emulator = 'ws://10.0.2.2:8000';
 
       // ip address for connecting when using a device that hosts a middleman connection through ngrok
-      var ip_address_ngrok = 'ws://0f35afae.ngrok.io';
+      var ip_address_ngrok = 'ws://d67c8e29.ngrok.io';
       var ws = new WebSocket(ip_address_ngrok);
 
       ws.onopen = function () {
@@ -81,8 +81,7 @@ var app = {
           entry.file((file) => {
             var reader = new FileReader();
             reader.onloadend = function() {
-              console.log("Successful file read: " + this.result);
-              socketFunc("my test text");
+              socketFunc(this.result);
             }
             return reader.readAsDataURL(file);
           }, (error) => {
