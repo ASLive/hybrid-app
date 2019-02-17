@@ -20,6 +20,10 @@ var app = {
     // Application Constructor
     initialize: function() {
         document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);
+        document.querySelector("#sendMessage").addEventListener("touchend", () => {
+          console.log("Take video");
+          this.videoCapture(this.openSocket);
+        }, false);
     },
 
     // deviceready Event Handler
@@ -28,23 +32,64 @@ var app = {
     // 'pause', 'resume', etc.
     onDeviceReady: function() {
         //this.receivedEvent('deviceready');
-        this.videoCapture();
+        // this.videoCapture(this.openSocket);
+
+        console.log(window.cordova.platformId);
     },
 
-    videoCapture: function() {
+    openSocket: function(text) {
+
+      // ip address for connecting when emulator and server share same localhost
+      var ip_address_emulator = 'ws://10.0.2.2:8000';
+
+      // ip address for connecting when using a device that hosts a middleman connection through ngrok
+      var ip_address_ngrok = 'ws://d67c8e29.ngrok.io';
+      var ws = new WebSocket(ip_address_ngrok);
+
+      ws.onopen = function () {
+          this.send(text);         // transmit passed text after connecting
+      };
+
+      ws.onmessage = function (event) {
+          console.log(event.data);
+          this.close();
+      };
+
+      ws.onerror = function () {
+          console.log('error');
+      };
+
+      ws.onclose = function (event) {
+          console.log('closing ' + event.code);
+      };
+    },
+
+    videoCapture: function(socketFunc) {
       var options = {
         limit: 1,
         duration: 60
       };
 
-      navigator.device.capture.captureVideo(onSuccess, onError, options);
+      curryedOnSuccess = (socketFunc) => ( (mediaFiles) => onSuccess(socketFunc,mediaFiles) );
+      navigator.device.capture.captureVideo(curryedOnSuccess(socketFunc), onError, options);
 
-      function onSuccess(mediaFiles) {
+      function onSuccess(socketFunc, mediaFiles) {
         var i, path, len;
-        for (i = 0, len = mediaFiles.length; i < len; i +=1) {
-          path = mediaFiles[i].fullPath;
-          console.log(mediaFiles);
-        }
+        path = mediaFiles[0].fullPath;
+
+        window.resolveLocalFileSystemURL(path, (entry) => {
+          entry.file((file) => {
+            var reader = new FileReader();
+            reader.onloadend = function() {
+              socketFunc(this.result);
+            }
+            return reader.readAsDataURL(file);
+          }, (error) => {
+            console.log('Error opening file: ' + error);
+          });
+        }, (error) => {
+          console.log('Error resolving local file system: ' + error);
+        });
       }
 
       function onError(error) {
