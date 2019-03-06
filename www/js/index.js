@@ -43,7 +43,7 @@ var app = {
       var ip_address_emulator = 'ws://10.0.2.2:8000';
 
       // ip address for connecting when using a device that hosts a middleman connection through ngrok
-      var ip_address_ngrok = 'ws://d67c8e29.ngrok.io';
+      var ip_address_ngrok = 'ws://98b11a62.ngrok.io';
       var ws = new WebSocket(ip_address_ngrok);
 
       ws.onopen = function () {
@@ -51,8 +51,11 @@ var app = {
       };
 
       ws.onmessage = function (event) {
-          console.log(event.data);
-          this.close();
+          var response = JSON.parse(event.data);
+          var elem = document.getElementById('translation_station');
+          elem.innerHTML = elem.innerHTML + '\n' + response.translation;
+          console.log(response);
+          console.log(elem);
       };
 
       ws.onerror = function () {
