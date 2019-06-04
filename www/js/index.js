@@ -33,8 +33,6 @@ var app = {
     onDeviceReady: function() {
         //this.receivedEvent('deviceready');
         // this.videoCapture(this.openSocket);
-
-        console.log(window.cordova.platformId);
     },
 
     openSocket: function(text) {
@@ -43,7 +41,8 @@ var app = {
       var ip_address_emulator = 'ws://10.0.2.2:8000';
 
       // ip address for connecting when using a device that hosts a middleman connection through ngrok
-      var ip_address_ngrok = 'ws://98b11a62.ngrok.io';
+      var ip_address_ngrok = 'ws://e4c76edf.ngrok.io';
+      var ip_address_aslive = 'ws://aslive.tech:8000';
       var ws = new WebSocket(ip_address_ngrok);
 
       ws.onopen = function () {
@@ -54,8 +53,6 @@ var app = {
           var response = JSON.parse(event.data);
           var elem = document.getElementById('translation_station');
           elem.innerHTML = elem.innerHTML + '\n' + response.translation;
-          console.log(response);
-          console.log(elem);
       };
 
       ws.onerror = function () {
@@ -78,15 +75,20 @@ var app = {
 
       function onSuccess(socketFunc, mediaFiles) {
         var i, path, len;
-        path = mediaFiles[0].fullPath;
+        path = mediaFiles[0].localURL;
 
         window.resolveLocalFileSystemURL(path, (entry) => {
           entry.file((file) => {
             var reader = new FileReader();
+            reader.readAsDataURL(file);
             reader.onloadend = function() {
+              console.log(this.result);
               socketFunc(this.result);
             }
-            return reader.readAsDataURL(file);
+            reader.onerror = (e) => {
+              console.log(e);
+            }
+            // return reader.readAsDataURL(file);
           }, (error) => {
             console.log('Error opening file: ' + error);
           });
